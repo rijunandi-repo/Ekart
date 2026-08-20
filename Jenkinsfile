@@ -54,7 +54,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('build and Tag docker image') {
             steps {
                 script {
@@ -86,9 +86,4 @@ pipeline {
             }
         }
     }
-    post {
-        always {
-            junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
-        }
-    }
-}
+} 
