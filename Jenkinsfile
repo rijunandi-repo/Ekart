@@ -1,35 +1,29 @@
 pipeline {
     agent any
-
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
         NVD_API_KEY = credentials('nvd-api-key')  // Jenkins secret text credential
     }
-
     tools {
         maven 'maven3'
         jdk 'jdk-17'
     }
-
     stages {
         stage('git checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/rijunandi-repo/Ekart.git'
             }
         }
-
         stage('compile') {
             steps {
                 sh "mvn compile"
             }
         }
-
         stage('unit tests') {
             steps {
                 sh "mvn test -DskipTests=true"
             }
         }
-
         stage('SonarQube analysis') {
             steps {
                 withSonarQubeEnv('sonar-scanner') {
@@ -40,7 +34,6 @@ pipeline {
                 }
             }
         }
-
         stage('OWASP Dependency Check') {
             steps {
                   withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
@@ -49,13 +42,11 @@ pipeline {
              }
         }
         }
-
         stage('Build') {
             steps {
                 sh "mvn package -DskipTests=true"
             }
         }
-
         stage('deploy to Nexus') {
             steps {
                 withMaven(globalMavenSettingsConfig: 'global-maven', jdk: 'jdk-17', maven: 'maven3', mavenSettingsConfig: '', traceability: true) {
@@ -64,7 +55,6 @@ pipeline {
             }
         }
         
-
         stage('build and Tag docker image') {
             steps {
                 script {
@@ -72,7 +62,6 @@ pipeline {
                     }
             }
         }
-
         stage('Push image to Hub'){
             steps{
                 script{
@@ -97,5 +86,9 @@ pipeline {
             }
         }
     }
-
+    post {
+        always {
+            junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
+        }
+    }
 }
